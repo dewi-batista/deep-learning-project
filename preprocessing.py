@@ -7,7 +7,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # change this to match your directory structure
-os.chdir('Deep Learning')
+# os.chdir('Deep Learning')
 
 def transform(monthly_data):
 
@@ -58,6 +58,10 @@ if __name__ == "__main__":
     data = pd.read_csv('data/monthly.csv')
 
     print(data.shape)
+
+    for column in data:
+        if data[column].isnull().sum() == 42:
+            print(column)
 
     # deal with missing vals
     for column in data:
