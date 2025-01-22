@@ -98,7 +98,7 @@ def test_model(model, test_loader):
 if __name__ == "__main__":
 
     # load data
-    data = pd.read_csv('data/template_data.csv')
+    data = pd.read_csv('data/monthly_filled.csv')
 
     # model initisalisation + hyperparameters
     feature_dim = data.shape[1] - 1 # final data column is output

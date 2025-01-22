@@ -1,3 +1,5 @@
+# old
+
 import numpy as np
 import os
 import pandas as pd
@@ -60,20 +62,20 @@ if __name__ == "__main__":
     print(data.shape)
 
     for column in data:
-        if data[column].isnull().sum() == 42:
-            print(column)
+        if data[column].isnull().sum() > 20:
+            print(column, data[column].isnull().sum())
 
-    # deal with missing vals
-    for column in data:
+    # # deal with missing vals
+    # for column in data:
         
-        # drop columns with at least 50 missing values
-        if data[column].isnull().sum() >= 50:
-            data = data.drop(column, axis=1)
+    #     # drop columns with at least 50 missing values
+    #     if data[column].isnull().sum() >= 50:
+    #         data = data.drop(column, axis=1)
         
-        # fill in missing data with mean (subject to change)
-        elif data[column].isnull().sum() > 0:
-            column_mean = data[column].mean()
-            data[column] = data[column].fillna(column_mean)
+    #     # fill in missing data with mean (subject to change)
+    #     elif data[column].isnull().sum() > 0:
+    #         column_mean = data[column].mean()
+    #         data[column] = data[column].fillna(column_mean)
 
     # save transformed data to a new csv file
     # transform(data).to_csv('data/monthly_filled.csv', index=False)
