@@ -116,12 +116,18 @@ if __name__ == "__main__":
     # form dataloaders to please PyTorch
     # 60%, 20% and 20% for training, validation and testing, repectively
     dataset = TimeSeriesDataset(data, time_steps)
+    print(len(dataset))
+
     train_split = int(0.6 * len(dataset))
     val_split   = int(0.2 * len(dataset))
-    test_split  = len(dataset) - train_split - val_split
-    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_split, val_split, test_split])
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) # shuffle just for training
+    # at first I randomly shuffled the window extractions to get train, validation and test
+    # but that ofc leads to overfitting since windows heavily overlap
+    train_dataset = torch.utils.data.Subset(dataset, list(range(train_split)))
+    val_dataset   = torch.utils.data.Subset(dataset, list(range(train_split, train_split + val_split)))
+    test_dataset  = torch.utils.data.Subset(dataset, list(range(train_split + val_split, len(dataset))))
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) # shuffling is probs a good idea here
     val_loader   = DataLoader(val_dataset  , batch_size=batch_size, shuffle=False)
     test_loader  = DataLoader(test_dataset , batch_size=batch_size, shuffle=False)
 
