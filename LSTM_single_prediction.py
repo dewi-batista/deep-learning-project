@@ -182,7 +182,7 @@ if __name__ == "__main__":
     # perform search for best hyperparam combination
     covariate_dim = data.shape[1] - 1 # final column is target covariate
     epochs = 100 # early stopping is used so this value is kind of an afterthought
-    number_of_trials = 1
+    number_of_trials = 10
     best_hyperparams = hyperparam_search(hyperparam_grid_dict, data, covariate_dim, epochs, number_of_trials)
     print(best_hyperparams)
 
