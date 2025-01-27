@@ -1,21 +1,18 @@
+from sklearn.impute import KNNImputer
+
 import numpy as np
-import os
 import pandas as pd
 import warnings
 
 # make those np.log() warnings fuck off
-warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
+warnings.simplefilter("ignore", category=FutureWarning)
 
-# change this to match your directory structure
-# os.chdir('Deep Learning')
-
+# this could benefit from a switch statement, not sure if that's a thing in python though
 def transform(monthly_data):
 
-    # apply suggested transformations
+    # apply the advised de-trending transformations
     for column in monthly_data:
-
-        # if column == "sasdate":
-        #     continue
 
         column_vals = monthly_data[column][1:]
 
@@ -47,34 +44,46 @@ def transform(monthly_data):
             for row_idx in range(column_vals.shape[0], 1, -1):
                 monthly_data.loc[row_idx, column] = column_vals[row_idx] / column_vals[row_idx - 1] - 1
 
-    # drop transformation row as well as first two days since some are not transformed
+    # drop transformation row as well as first two months since some have values that are not transformed
     monthly_data = monthly_data.drop([0, 1, 2], axis=0)
 
     return monthly_data
 
 if __name__ == "__main__":
 
+    # choose target_covariate (UNRATE or CPIAUCSL)
+    target_covariate = 'CPIAUCSL'
+
     # load data
     data = pd.read_csv('data/monthly.csv')
 
-    # drop the first column which pertains to dates
+    # drop the first column (which pertains to dates) and make target_covariate the final column
     data = data.drop(data.columns[0], axis=1)
+    data[target_covariate] = data.pop(target_covariate)
 
+    # 1) drop columns with at least 50 missing values and
+    #    fill in remaining missing data via kNN with k = 5
     for column in data:
-        if data[column].isnull().sum() >= 40:
-            print(column, data[column].isnull().sum())
-
-    # deal with missing vals
-    for column in data:
-        
-        # drop columns with at least 50 missing values
         if data[column].isnull().sum() >= 50:
             data = data.drop(column, axis=1)
-        
-        # fill in missing data with mean (subject to change)
-        elif data[column].isnull().sum() > 0:
-            column_mean = data[column].mean()
-            data[column] = data[column].fillna(column_mean)
+    data = pd.DataFrame(KNNImputer(n_neighbors=5).fit_transform(data), columns=data.columns)
 
-    # save transformed data to a new csv file
-    transform(data).to_csv('data/monthly_filled.csv', index=False)
+    # 2) apply advised de-trending transformations
+    data = transform(data)
+
+    # 3) add lags to data (hopefully this resolves having so little data)
+    features = data.iloc[:, :-1]
+    lag_num = 3
+    for lag in range(1, lag_num + 1):
+        for col in features.columns:
+            data[f"{col}_L{lag}"] = features[col].shift(lag)
+    data = data.iloc[lag_num:] # some missing values after introducing lags
+
+    # 4) remove features that present low correlation with target_covariate
+    data[target_covariate] = data.pop(target_covariate)
+    correlations = data.corr()[target_covariate].abs()
+    high_corr_features = correlations[correlations > 0.2].index
+    data = data[high_corr_features]
+
+    # save to a new csv file
+    data.to_csv(f'data/monthly_filled_{target_covariate}.csv', index=False)
