@@ -1,5 +1,3 @@
-# old
-
 import numpy as np
 import os
 import pandas as pd
@@ -16,8 +14,8 @@ def transform(monthly_data):
     # apply suggested transformations
     for column in monthly_data:
 
-        if column == "sasdate":
-            continue
+        # if column == "sasdate":
+        #     continue
 
         column_vals = monthly_data[column][1:]
 
@@ -59,23 +57,24 @@ if __name__ == "__main__":
     # load data
     data = pd.read_csv('data/monthly.csv')
 
-    print(data.shape)
+    # drop the first column which pertains to dates
+    data = data.drop(data.columns[0], axis=1)
 
     for column in data:
-        if data[column].isnull().sum() > 20:
+        if data[column].isnull().sum() >= 40:
             print(column, data[column].isnull().sum())
 
-    # # deal with missing vals
-    # for column in data:
+    # deal with missing vals
+    for column in data:
         
-    #     # drop columns with at least 50 missing values
-    #     if data[column].isnull().sum() >= 50:
-    #         data = data.drop(column, axis=1)
+        # drop columns with at least 50 missing values
+        if data[column].isnull().sum() >= 50:
+            data = data.drop(column, axis=1)
         
-    #     # fill in missing data with mean (subject to change)
-    #     elif data[column].isnull().sum() > 0:
-    #         column_mean = data[column].mean()
-    #         data[column] = data[column].fillna(column_mean)
+        # fill in missing data with mean (subject to change)
+        elif data[column].isnull().sum() > 0:
+            column_mean = data[column].mean()
+            data[column] = data[column].fillna(column_mean)
 
     # save transformed data to a new csv file
-    # transform(data).to_csv('data/monthly_filled.csv', index=False)
+    transform(data).to_csv('data/monthly_filled.csv', index=False)
