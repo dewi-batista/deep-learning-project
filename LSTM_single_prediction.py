@@ -10,6 +10,7 @@ import torch.optim as optim
 
 # architecture construction
 class LSTM_model(nn.Module):
+
     def __init__(self, input_dim, LSTM_block_dim, MLP_block_dim):
         super(LSTM_model, self).__init__()
         self.LSTM_block_1 = nn.LSTM(input_dim, LSTM_block_dim, batch_first=True)
@@ -23,6 +24,7 @@ class LSTM_model(nn.Module):
         self.output = nn.Linear(MLP_block_dim, 1)
 
     def forward(self, x):
+
         # feed through LSTM blocks
         x, _ = self.LSTM_block_1(x)
         x, _ = self.LSTM_block_2(x)
@@ -126,7 +128,7 @@ def hyperparam_search(param_grid, data, covariate_dim, epochs, number_of_trials)
     for _ in range(number_of_trials):
         
         # randomly sample combination of hyperparameters from pre-made grid
-        hyperparams = {k: random.choice(v) for k, v in param_grid.items()}
+        hyperparams = {key : random.choice(value) for key, value in param_grid.items()}
         print("Sampled hyperparameters:", hyperparams)
 
         # windowify and assign 60%, 20% and 20% for training, validation and testing, repectively
