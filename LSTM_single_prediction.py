@@ -1,7 +1,3 @@
-#=============================================================================#
-#  LSTM_unemployment and LSTM_inflation_rate are the same except hyperparams  #
-#=============================================================================#
-
 from torch.utils.data import DataLoader, Dataset
 
 import matplotlib.pyplot as plt
