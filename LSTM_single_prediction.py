@@ -13,14 +13,17 @@ class LSTM_model(nn.Module):
 
     def __init__(self, input_dim, LSTM_block_dim, MLP_block_dim):
         super(LSTM_model, self).__init__()
+        
         self.LSTM_block_1 = nn.LSTM(input_dim, LSTM_block_dim, batch_first=True)
         self.LSTM_block_2 = nn.LSTM(LSTM_block_dim, LSTM_block_dim, batch_first=True)
         self.LSTM_block_3 = nn.LSTM(LSTM_block_dim, LSTM_block_dim, batch_first=True)
+        
         self.batch_norm = nn.BatchNorm1d(LSTM_block_dim)
         self.dropout = nn.Dropout(0.5)
         
         self.MLP_layer_1 = nn.Linear(LSTM_block_dim, MLP_block_dim)
         self.MLP_layer_2 = nn.Linear(MLP_block_dim, MLP_block_dim)
+        
         self.output = nn.Linear(MLP_block_dim, 1)
 
     def forward(self, x):
