@@ -122,7 +122,7 @@ if __name__ == "__main__":
     keep_cols = []
     for col in data.columns:
         if col in ['UNRATE', 'CPIAUCSL']:
-            continue
+            continue # this is needed so that we don't duplicate
         correlation_unrate = correlation_matrix[col]['UNRATE']
         correlation_inflation = correlation_matrix[col]['CPIAUCSL']
         if (correlation_unrate > 0.2) or (correlation_inflation > 0.2):

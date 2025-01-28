@@ -39,6 +39,7 @@ class LSTM_model(nn.Module):
         x = torch.relu(self.MLP_layer_1(x))
         x = torch.relu(self.MLP_layer_2(x))
         x = self.output(x)
+
         return x
 
 # training timeeeeee
@@ -68,7 +69,6 @@ def train_model(model, train_loader, validation_loader, loss_function, optimiser
                 outputs = model(X_batch)
                 loss = loss_function(outputs.squeeze(), y_batch)
                 validation += loss.item()
-
         validation_loss = validation / len(validation_loader)
         # print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {train_loss / len(train_loader):.4f}, Validation Loss: {validation_loss:.4f}")
 
@@ -81,13 +81,13 @@ def train_model(model, train_loader, validation_loader, loss_function, optimiser
             if patience_num >= patience_treshold:
                 break
         
-    return validation_loss
+    return best_validation_loss
 
 # testing timeeeeee
 def test_model(model, test_loader, target_covariate):
     
-    test_loss = 0
     loss_func = nn.MSELoss()
+    test_loss = 0
     
     model.eval() # included to make sure dropout doesn't apply during testing
     preds, actuals = [], []
@@ -129,8 +129,6 @@ class Windowify(Dataset):
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
-    
-import random
 
 def hyperparam_search(param_grid, data, covariate_dim, epochs, number_of_trials):
 
@@ -167,7 +165,7 @@ def hyperparam_search(param_grid, data, covariate_dim, epochs, number_of_trials)
         if validation_loss < best_loss:
             best_loss = validation_loss
             best_hyperparams = hyperparams
-    print('\nBest validation loss:', best_loss)
+    print('Best validation loss:', best_loss)
 
     return best_hyperparams
 
@@ -193,9 +191,9 @@ if __name__ == "__main__":
         # perform search for best hyperparam combination
         covariate_dim = data.shape[1] - 1 # final column is target covariate
         epochs = 100 # early stopping is used so this value is kind of an afterthought
-        number_of_trials = 100
+        number_of_trials = 10
         best_hyperparams = hyperparam_search(hyperparam_grid_dict, data, covariate_dim, epochs, number_of_trials)
-        print(best_hyperparams)
+        print('Best hyperparameters:', best_hyperparams)
 
         #========== 2) test 'best' hyperparameters from search ==========#
 
@@ -215,7 +213,7 @@ if __name__ == "__main__":
         validation_loader = DataLoader(validation_dataset, batch_size=best_hyperparams['batch_size'])
         test_loader = DataLoader(test_dataset, batch_size=best_hyperparams['batch_size'])
 
-        # test model on best hyperparams and see how it does 
+        # train + test model on best hyperparams and see how it does 
         model = LSTM_model(covariate_dim, best_hyperparams['LSTM_block_dim'], best_hyperparams['MLP_block_dim'])
         optimiser = optim.Adam(model.parameters(), lr=best_hyperparams['learning_rate'])
         loss_function = nn.MSELoss()
