@@ -42,7 +42,7 @@ class LSTM_model(nn.Module):
         return x
 
 # training timeeeeee
-def train_model(model, train_loader, validation_loader, loss_function, optimiser, epochs, patience=5):
+def train_model(model, train_loader, validation_loader, loss_function, optimiser, epochs):
 
     best_validation_loss = 1_000
     patience_num = 0
@@ -72,7 +72,7 @@ def train_model(model, train_loader, validation_loader, loss_function, optimiser
         validation_loss = validation / len(validation_loader)
         # print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {train_loss / len(train_loader):.4f}, Validation Loss: {validation_loss:.4f}")
 
-        # rudimentary implementation of early stopping, it includes a burn-in phase, not sure if good idea or not
+        # rudimentary implementation of early stopping, it includes a burn-in phase, probably a good idea
         if validation_loss < best_validation_loss or epoch < 20:
             best_validation_loss = validation_loss
             patience_num = 0
@@ -81,26 +81,34 @@ def train_model(model, train_loader, validation_loader, loss_function, optimiser
             if patience_num >= patience_treshold:
                 break
         
-    return train_loss
+    return validation_loss
 
 # testing timeeeeee
-def test_model(model, test_loader):
+def test_model(model, test_loader, target_covariate):
+    
+    test_loss = 0
+    loss_func = nn.MSELoss()
+    
     model.eval() # included to make sure dropout doesn't apply during testing
     preds, actuals = [], []
     for X_batch, y_batch in test_loader:
         outputs = model(X_batch).squeeze()
         preds.extend(outputs.tolist())
         actuals.extend(y_batch.tolist())
-    
+        test_loss += loss_func(outputs, y_batch).item()
+    test_loss /= len(test_loader)
+
     # illustrate how the model does on the test set
     plt.figure()
     plt.plot(actuals, label="Actual")
     plt.plot(preds, label="Predicted")
     plt.legend()
-    plt.title("Predictions vs Actual Values")
-    plt.xlabel("Window Index")
-    plt.ylabel("Value")
-    plt.show()
+    plt.title(f'Predictions vs Actual Values, test loss: {np.round(test_loss, 3)}')
+    plt.xlabel('Window Index')
+    plt.ylabel('Value')
+    plt.savefig(f'figures/test_LSTM_single_pred_{target_covariate}.pdf')
+
+    print('Test loss:', np.round(test_loss, 3))
 
 # extract windows of the form (x_t, ..., x_{t+h}, y_{t+h+1}) to form train, test and val
 class Windowify(Dataset):
@@ -159,7 +167,7 @@ def hyperparam_search(param_grid, data, covariate_dim, epochs, number_of_trials)
         if validation_loss < best_loss:
             best_loss = validation_loss
             best_hyperparams = hyperparams
-    print('\nBest loss:', best_loss)
+    print('\nBest validation loss:', best_loss)
 
     return best_hyperparams
 
@@ -174,16 +182,16 @@ if __name__ == "__main__":
     # to be randomly sampled from in search of best hyper parameter combination
     hyperparam_grid_dict = {
         "batch_size": [16, 32, 64],
-        "learning_rate": [0.001, 0.01],
-        "LSTM_block_dim": [16, 32, 64],
-        "MLP_block_dim": [4, 8, 16],
-        "time_steps": [6, 10, 14, 18, 20, 24]
+        "learning_rate": [0.001, 0.01, 0.1],
+        "LSTM_block_dim": [8, 16, 32, 64, 128],
+        "MLP_block_dim": [4, 8, 16, 32, 64],
+        "time_steps": [6, 10, 14, 18, 20, 24, 28, 32, 36]
     }
 
     # perform search for best hyperparam combination
     covariate_dim = data.shape[1] - 1 # final column is target covariate
     epochs = 100 # early stopping is used so this value is kind of an afterthought
-    number_of_trials = 10
+    number_of_trials = 100
     best_hyperparams = hyperparam_search(hyperparam_grid_dict, data, covariate_dim, epochs, number_of_trials)
     print(best_hyperparams)
 
@@ -211,4 +219,4 @@ if __name__ == "__main__":
     loss_function = nn.MSELoss()
     
     train_model(model, train_loader, validation_loader, loss_function, optimiser, epochs)
-    test_model(model, test_loader)
+    test_model(model, test_loader, target_covariate)

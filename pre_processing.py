@@ -52,7 +52,7 @@ def transform(monthly_data):
 if __name__ == "__main__":
 
     # choose target_covariate (UNRATE or CPIAUCSL)
-    target_covariate = 'CPIAUCSL'
+    target_covariate = 'UNRATE'
 
     # load data
     data = pd.read_csv('data/monthly.csv')
@@ -86,4 +86,4 @@ if __name__ == "__main__":
     data = data[high_corr_features]
 
     # save to a new csv file
-    data.to_csv(f'data/monthly_filled_{target_covariate}.csv', index=False)
+    data.to_csv(f'data/monthly_{target_covariate}.csv', index=False)
