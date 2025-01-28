@@ -173,50 +173,52 @@ def hyperparam_search(param_grid, data, covariate_dim, epochs, number_of_trials)
 
 if __name__ == "__main__":
 
-    # choose target_covariate (UNRATE or CPIAUCSL) and load data
-    target_covariate = 'UNRATE'
-    data = pd.read_csv(f'data/monthly_filled_{target_covariate}.csv')
+    # the target covariates relevant to our task are unemployment (UNRATE) and inflation (CPIAUCSL)
+    for target_covariate in ['UNRATE', 'CPIAUCSL']:
+        
+        #========== 0) load corresponding dataset ==========#
+        data = pd.read_csv(f'data/monthly_filled_{target_covariate}.csv')
 
-    #========== 1) hyperparameter search ==========#
-    
-    # to be randomly sampled from in search of best hyper parameter combination
-    hyperparam_grid_dict = {
-        "batch_size": [16, 32, 64],
-        "learning_rate": [0.001, 0.01, 0.1],
-        "LSTM_block_dim": [8, 16, 32, 64, 128],
-        "MLP_block_dim": [4, 8, 16, 32, 64],
-        "time_steps": [6, 10, 14, 18, 20, 24, 28, 32, 36]
-    }
+        #========== 1) hyperparameter search ==========#
+        
+        # to be randomly sampled from in search of best hyper parameter combination
+        hyperparam_grid_dict = {
+            "batch_size": [16, 32, 64],
+            "learning_rate": [0.001, 0.01, 0.1],
+            "LSTM_block_dim": [8, 16, 32, 64, 128],
+            "MLP_block_dim": [4, 8, 16, 32, 64],
+            "time_steps": [6, 10, 14, 18, 20, 24, 28, 32, 36]
+        }
 
-    # perform search for best hyperparam combination
-    covariate_dim = data.shape[1] - 1 # final column is target covariate
-    epochs = 100 # early stopping is used so this value is kind of an afterthought
-    number_of_trials = 100
-    best_hyperparams = hyperparam_search(hyperparam_grid_dict, data, covariate_dim, epochs, number_of_trials)
-    print(best_hyperparams)
+        # perform search for best hyperparam combination
+        covariate_dim = data.shape[1] - 1 # final column is target covariate
+        epochs = 100 # early stopping is used so this value is kind of an afterthought
+        number_of_trials = 100
+        best_hyperparams = hyperparam_search(hyperparam_grid_dict, data, covariate_dim, epochs, number_of_trials)
+        print(best_hyperparams)
 
-    #========== 2) test 'best' hyperparameters from search ==========#
+        #========== 2) test 'best' hyperparameters from search ==========#
 
-    # windowify and assign 60%, 20% and 20% for training, validation and testing, repectively
-    dataset = Windowify(data, best_hyperparams['time_steps'])
+        # windowify and assign 60%, 20% and 20% for training, validation and testing, repectively
+        dataset = Windowify(data, best_hyperparams['time_steps'])
 
-    training_len    = int(0.6 * len(dataset))
-    vallidation_len = int(0.2 * len(dataset))
+        training_len    = int(0.6 * len(dataset))
+        vallidation_len = int(0.2 * len(dataset))
 
-    # at first, the window extractions were randomly assigned to train, validation and test but that ofcourse
-    # leads to potential overfitting (since windows heavily overlap), now they are split chronologically
-    train_dataset      = torch.utils.data.Subset(dataset, list(range(training_len)))
-    validation_dataset = torch.utils.data.Subset(dataset, list(range(training_len, training_len + vallidation_len)))
-    test_dataset       = torch.utils.data.Subset(dataset, list(range(training_len + vallidation_len, len(dataset)))) # last 20%
-    
-    train_loader      = DataLoader(train_dataset, batch_size=best_hyperparams['batch_size'], shuffle=True)
-    validation_loader = DataLoader(validation_dataset, batch_size=best_hyperparams['batch_size'])
-    test_loader = DataLoader(test_dataset, batch_size=best_hyperparams['batch_size'])
+        # at first, the window extractions were randomly assigned to train, validation and test but that ofcourse
+        # leads to potential overfitting (since windows heavily overlap), now they are split chronologically
+        train_dataset      = torch.utils.data.Subset(dataset, list(range(training_len)))
+        validation_dataset = torch.utils.data.Subset(dataset, list(range(training_len, training_len + vallidation_len)))
+        test_dataset       = torch.utils.data.Subset(dataset, list(range(training_len + vallidation_len, len(dataset)))) # last 20%
+        
+        train_loader      = DataLoader(train_dataset, batch_size=best_hyperparams['batch_size'], shuffle=True)
+        validation_loader = DataLoader(validation_dataset, batch_size=best_hyperparams['batch_size'])
+        test_loader = DataLoader(test_dataset, batch_size=best_hyperparams['batch_size'])
 
-    # test model on best hyperparams and see how it does 
-    model = LSTM_model(covariate_dim, best_hyperparams['LSTM_block_dim'], best_hyperparams['MLP_block_dim'])
-    optimiser = optim.Adam(model.parameters(), lr=best_hyperparams['learning_rate'])
-    loss_function = nn.MSELoss()
-    
-    train_model(model, train_loader, validation_loader, loss_function, optimiser, epochs)
-    test_model(model, test_loader, target_covariate)
+        # test model on best hyperparams and see how it does 
+        model = LSTM_model(covariate_dim, best_hyperparams['LSTM_block_dim'], best_hyperparams['MLP_block_dim'])
+        optimiser = optim.Adam(model.parameters(), lr=best_hyperparams['learning_rate'])
+        loss_function = nn.MSELoss()
+        
+        train_model(model, train_loader, validation_loader, loss_function, optimiser, epochs)
+        test_model(model, test_loader, target_covariate)
