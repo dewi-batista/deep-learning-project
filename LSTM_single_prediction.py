@@ -29,9 +29,9 @@ class LSTM_model(nn.Module):
     def forward(self, x):
 
         # feed through LSTM blocks
-        x, _ = self.LSTM_block_1(x)
-        x, _ = self.LSTM_block_2(x)
-        x, _ = self.LSTM_block_3(x)
+        x, h = self.LSTM_block_1(x)
+        x, h = self.LSTM_block_2(x)
+        x, h = self.LSTM_block_3(x)
         x = self.batch_norm(x[:, -1, :])
         x = self.dropout(x)
 
@@ -103,12 +103,12 @@ def test_model(model, test_loader, target_covariate):
     plt.plot(actuals, label="Actual")
     plt.plot(preds, label="Predicted")
     plt.legend()
-    plt.title(f'Predictions vs Actual Values, test loss: {np.round(test_loss, 3)}')
+    plt.title(f'Predictions vs Actual Values, test loss: {np.round(test_loss, 8)}')
     plt.xlabel('Window Index')
     plt.ylabel('Value')
     plt.savefig(f'figures/test_LSTM_single_pred_{target_covariate}.pdf')
 
-    print('Test loss:', np.round(test_loss, 3))
+    print('Test loss:', np.round(test_loss, 8))
 
 # extract windows of the form (x_t, ..., x_{t+h}, y_{t+h+1}) to form train, test and val
 class Windowify(Dataset):
