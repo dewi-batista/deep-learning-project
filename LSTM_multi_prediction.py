@@ -128,18 +128,18 @@ def test_model(model, test_loader):
 
     # illustrate how the model does on the inflation test set
     plt.figure()
-    plt.plot(actuals_inflation, label='Actual Infl.')
-    plt.plot(preds_inflation, label='Pred. Infl.')
+    plt.plot(actuals_inflation, label='Actual')
+    plt.plot(preds_inflation, label='Predicted')
     plt.legend()
-    plt.title(f'Inflation Forecast (MSE: {test_loss:.3f})')
+    plt.title(f'Unemployment Forecast (MSE: {test_loss:.3f})')
     plt.savefig('figures/test_LSTM_multi_pred_inflation.pdf')
 
     # illustrate how the model does on the unemployment test set
     plt.figure()
-    plt.plot(actuals_unemployment, label='Actual Unemp.')
-    plt.plot(preds_unemployment, label='Pred. Unemp.')
+    plt.plot(actuals_unemployment, label='Actual')
+    plt.plot(preds_unemployment, label='Predicted')
     plt.legend()
-    plt.title(f'Unemployment Forecast (MSE: {test_loss:.3f})')
+    plt.title(f'Inflation Forecast (MSE: {test_loss:.3f})')
     plt.savefig('figures/test_LSTM_multi_pred_unemp.pdf')
     
     print('Test loss:', round(test_loss, 3))
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     # perform search for best hyperparam combination
     covariate_dim = data.shape[1] - 2 # final two columns are target covariates
     epochs = 100 # early stopping is used so this value is kind of an afterthought
-    number_of_trials = 10
+    number_of_trials = 5
     best_hyperparams = hyperparam_search(hyperparam_grid_dict, data, covariate_dim, epochs, number_of_trials)
     print('Best hyperparameters:', best_hyperparams)
 

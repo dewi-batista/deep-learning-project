@@ -18,6 +18,7 @@ class LSTM_model(nn.Module):
         self.LSTM_block_2 = nn.LSTM(LSTM_block_dim, LSTM_block_dim, batch_first=True)
         self.LSTM_block_3 = nn.LSTM(LSTM_block_dim, LSTM_block_dim, batch_first=True)
         
+        # unclear if useful but can't hurt
         self.batch_norm = nn.BatchNorm1d(LSTM_block_dim)
         self.dropout = nn.Dropout(0.5)
         
@@ -32,6 +33,8 @@ class LSTM_model(nn.Module):
         x, h = self.LSTM_block_1(x)
         x, h = self.LSTM_block_2(x)
         x, h = self.LSTM_block_3(x)
+
+        # unclear if useful but can't hurt
         x = self.batch_norm(x[:, -1, :])
         x = self.dropout(x)
 
@@ -191,7 +194,7 @@ if __name__ == "__main__":
         # perform search for best hyperparam combination
         covariate_dim = data.shape[1] - 1 # final column is target covariate
         epochs = 100 # early stopping is used so this value is kind of an afterthought
-        number_of_trials = 10
+        number_of_trials = 5
         best_hyperparams = hyperparam_search(hyperparam_grid_dict, data, covariate_dim, epochs, number_of_trials)
         print('Best hyperparameters:', best_hyperparams)
 
